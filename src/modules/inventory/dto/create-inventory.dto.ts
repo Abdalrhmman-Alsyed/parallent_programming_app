@@ -4,7 +4,12 @@ export class CreateInventoryDto {
   @IsOptional()
   @IsInt()
   @Min(0)
-  quantity?: number;
+  stock?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reserved?: number;
 
   @IsInt()
   productId!: number;

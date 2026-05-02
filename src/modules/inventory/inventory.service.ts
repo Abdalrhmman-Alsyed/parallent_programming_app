@@ -15,7 +15,16 @@ export class InventoryService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async create(createInventoryDto: CreateInventoryDto): Promise<Inventory> {
+  private withAvailable<T extends Inventory>(inventory: T): T & { available: number } {
+    return {
+      ...inventory,
+      available: inventory.stock - inventory.reserved,
+    };
+  }
+
+  async create(
+    createInventoryDto: CreateInventoryDto,
+  ): Promise<Inventory & { available: number }> {
     const product = await this.productRepository.findOne({
       where: { id: createInventoryDto.productId },
     });
@@ -24,27 +33,38 @@ export class InventoryService {
     }
 
     const inventory = this.inventoryRepository.create({
-      quantity: createInventoryDto.quantity ?? 0,
+      stock: createInventoryDto.stock ?? 0,
+      reserved: createInventoryDto.reserved ?? 0,
       product,
     });
-    return this.inventoryRepository.save(inventory);
+    const savedInventory = await this.inventoryRepository.save(inventory);
+    return this.withAvailable(savedInventory);
   }
 
-  findAll(): Promise<Inventory[]> {
-    return this.inventoryRepository.find({ relations: ['product'] });
+  async findAll(): Promise<Array<Inventory & { available: number }>> {
+    const inventories = await this.inventoryRepository.find({ relations: ['product'] });
+    return inventories.map((inventory) => this.withAvailable(inventory));
   }
 
-  async findOne(id: number): Promise<Inventory> {
+  async findOne(id: number): Promise<Inventory & { available: number }> {
     const inventory = await this.inventoryRepository.findOne({
       where: { id },
       relations: ['product'],
     });
     if (!inventory) throw new NotFoundException(`Inventory with ID ${id} not found`);
-    return inventory;
+    return this.withAvailable(inventory);
   }
 
-  async update(id: number, updateInventoryDto: UpdateInventoryDto): Promise<Inventory> {
-    const inventory = await this.findOne(id);
+  async update(
+    id: number,
+    updateInventoryDto: UpdateInventoryDto,
+  ): Promise<Inventory & { available: number }> {
+    const inventory = await this.inventoryRepository.findOne({
+      where: { id },
+      relations: ['product'],
+    });
+    if (!inventory) throw new NotFoundException(`Inventory with ID ${id} not found`);
+
     if (updateInventoryDto.productId !== undefined) {
       const product = await this.productRepository.findOne({
         where: { id: updateInventoryDto.productId },
@@ -54,10 +74,15 @@ export class InventoryService {
       }
       inventory.product = product;
     }
-    if (updateInventoryDto.quantity !== undefined) {
-      inventory.quantity = updateInventoryDto.quantity;
+    if (updateInventoryDto.stock !== undefined) {
+      inventory.stock = updateInventoryDto.stock;
     }
-    return this.inventoryRepository.save(inventory);
+    if (updateInventoryDto.reserved !== undefined) {
+      inventory.reserved = updateInventoryDto.reserved;
+    }
+
+    const savedInventory = await this.inventoryRepository.save(inventory);
+    return this.withAvailable(savedInventory);
   }
 
   async remove(id: number): Promise<void> {

@@ -15,7 +15,10 @@ export class Inventory {
   id!: number;
 
   @Column({ type: 'integer', default: 0 })
-  quantity!: number;
+  stock!: number;
+
+  @Column({ type: 'integer', default: 0 })
+  reserved!: number;
 
   @Column({ name: 'product_id', type: 'integer', unique: true })
   productId!: number;
@@ -29,4 +32,8 @@ export class Inventory {
   @OneToOne(() => Product, (product) => product.inventory)
   @JoinColumn({ name: 'product_id' })
   product!: Product;
+
+  get available(): number {
+    return this.stock - this.reserved;
+  }
 }
