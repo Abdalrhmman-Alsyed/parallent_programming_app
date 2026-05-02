@@ -33,7 +33,11 @@ export class Inventory {
   @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  get available(): number {
-    return this.stock - this.reserved;
+  get quantity(): number {
+    return this.stock;
+  }
+
+  set quantity(value: number) {
+    this.stock = value;
   }
 }
