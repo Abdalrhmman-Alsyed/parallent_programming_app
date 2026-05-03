@@ -17,10 +17,8 @@ export class EmailProcessor extends WorkerHost {
     port: 587,
     secure: false,
     auth: {
-      user: 'skinani225@gmail.com',
-      pass: 'yzqz vqhb  yamf lgbd',
-      // user: process.env.SMTP_USER,
-      // pass: process.env.SMTP_PASS,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
   });
 
