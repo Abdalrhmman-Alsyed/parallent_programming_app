@@ -7,10 +7,12 @@ import { User } from '../user/entity/user.entity';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { Order } from './entity/order.entity';
+import { OrderExpirationCronService } from './services/order-expiration-cron.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem, User, Product, Inventory])],
   controllers: [OrderController],
-  providers: [OrderService],
+  providers: [OrderService, OrderExpirationCronService],
+  exports: [OrderService, OrderExpirationCronService],
 })
 export class OrderModule {}

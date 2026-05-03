@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,6 +16,7 @@ import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         name: 'default',
@@ -29,8 +31,7 @@ import { UserModule } from './modules/user/user.module';
     OrderModule,
     OrderItemModule,
     PaymentModule,
-    // ...(process.env.NODE_ENV === 'development' ? [DevTestModule] : []),
-    DevTestModule,
+    ...(process.env.NODE_ENV === 'development' ? [DevTestModule] : []),
   ],
   controllers: [AppController],
   providers: [

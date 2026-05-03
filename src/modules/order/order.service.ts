@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
+import { OrderStatus } from '../../common/enums/order-status.enum';
 import { Inventory } from '../inventory/entity/inventory.entity';
 import { OrderItem } from '../order-item/entity/order-item.entity';
 import { Product } from '../product/entity/product.entity';
@@ -110,6 +111,15 @@ export class OrderService {
   async update(id: number, updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.findOne(id);
     order.status = updateOrderStatusDto.status;
+    return this.orderRepository.save(order);
+  }
+
+  async cancelOrder(orderId: number): Promise<Order> {
+    const order = await this.findOne(orderId);
+    if (order.status === OrderStatus.CANCELLED) {
+      return order;
+    }
+    order.status = OrderStatus.CANCELLED;
     return this.orderRepository.save(order);
   }
 

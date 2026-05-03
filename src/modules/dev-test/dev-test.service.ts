@@ -1,20 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { OrderExpirationCronService } from '../order/services/order-expiration-cron.service';
 
 @Injectable()
 export class DevTestService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly orderExpirationCronService: OrderExpirationCronService,
+  ) {}
 
   async triggerHttpDelay(): Promise<{ message: string }> {
     // Development testing only: intentionally exceed global HTTP timeout.
-    await new Promise((resolve) => setTimeout(resolve, 11000));
+    await new Promise((resolve) => setTimeout(resolve, 12000));
     return { message: 'This response should not be returned due to HTTP timeout' };
   }
 
   async triggerDbTimeout(): Promise<{ message: string; dbTimeoutTriggered: boolean }> {
     try {
       // Development testing only: should exceed PostgreSQL statement_timeout (10s).
-      await this.dataSource.query('SELECT pg_sleep(7)');
+      await this.dataSource.query('SELECT pg_sleep(12)');
       return {
         message: 'DB timeout did not trigger (check statement_timeout configuration)',
         dbTimeoutTriggered: false,
@@ -41,8 +45,13 @@ export class DevTestService {
   }
 
   async runDbPingQuery(): Promise<{ message: string }> {
-    // Development testing only: keep DB connections busy briefly to test pool limit.
+    // await this.dataSource.query('SELظECT 1');
     await this.dataSource.query('SELECT pg_sleep(5)');
-    return { message: 'Database query executed after delay' };
+    return { message: 'Database query executed' };
+  }
+
+  async runCancelExpiredPendingOrdersTest(): Promise<{ message: string }> {
+    await this.orderExpirationCronService.cancelExpiredPendingOrders();
+    return { message: 'Expired pending orders cancellation triggered' };
   }
 }

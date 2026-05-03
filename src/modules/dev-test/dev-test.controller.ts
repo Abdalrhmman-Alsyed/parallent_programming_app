@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { DevTestService } from './dev-test.service';
 
@@ -31,5 +31,10 @@ export class DevTestController {
   @Get('db-query')
   async runDbQuery() {
     return this.devTestService.runDbPingQuery();
+  }
+
+  @Post('cancel-expired-pending-orders')
+  async cancelExpiredPendingOrders() {
+    return this.devTestService.runCancelExpiredPendingOrdersTest();
   }
 }
