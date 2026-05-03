@@ -1,0 +1,28 @@
+DELETE http://localhost:3000/orders/2
+###
+POST http://localhost:3000/orders/unsafe
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "items": [
+    {
+      "productId": 3,
+      "quantity": 1
+    },
+    {
+      "productId": 4,
+      "quantity": 2
+    }
+  ]
+}
+
+###
+
+POST http://localhost:3000/orders/unsafe
+Content-Type: application/json
+
+{
+"userId": "abc",
+"items": []
+}

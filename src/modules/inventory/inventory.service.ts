@@ -20,7 +20,47 @@ export class InventoryService {
       where: { id: createInventoryDto.productId },
     });
     if (!product) {
-      throw new NotFoundException(`Product with ID ${createInventoryDto.productId} not found`);
+      throw new NotFoundException(
+        `Product with ID ${createInventoryDto.productId} not found`,
+      );
+    }
+
+    const inventory = this.inventoryRepository.create({
+      stock: createInventoryDto.stock ?? 0,
+      reserved: createInventoryDto.reserved ?? 0,
+      product,
+    });
+    return this.inventoryRepository.save(inventory);
+  }
+  async createSafeMode(
+    createInventoryDto: CreateInventoryDto,
+  ): Promise<Inventory> {
+    const product = await this.productRepository.findOne({
+      where: { id: createInventoryDto.productId },
+    });
+    if (!product) {
+      throw new NotFoundException(
+        `Product with ID ${createInventoryDto.productId} not found`,
+      );
+    }
+
+    const inventory = this.inventoryRepository.create({
+      stock: createInventoryDto.stock ?? 0,
+      reserved: createInventoryDto.reserved ?? 0,
+      product,
+    });
+    return this.inventoryRepository.save(inventory);
+  }
+  async createUnSafeMode(
+    createInventoryDto: CreateInventoryDto,
+  ): Promise<Inventory> {
+    const product = await this.productRepository.findOne({
+      where: { id: createInventoryDto.productId },
+    });
+    if (!product) {
+      throw new NotFoundException(
+        `Product with ID ${createInventoryDto.productId} not found`,
+      );
     }
 
     const inventory = this.inventoryRepository.create({
@@ -40,18 +80,24 @@ export class InventoryService {
       where: { id },
       relations: ['product'],
     });
-    if (!inventory) throw new NotFoundException(`Inventory with ID ${id} not found`);
+    if (!inventory)
+      throw new NotFoundException(`Inventory with ID ${id} not found`);
     return inventory;
   }
 
-  async update(id: number, updateInventoryDto: UpdateInventoryDto): Promise<Inventory> {
+  async update(
+    id: number,
+    updateInventoryDto: UpdateInventoryDto,
+  ): Promise<Inventory> {
     const inventory = await this.findOne(id);
     if (updateInventoryDto.productId !== undefined) {
       const product = await this.productRepository.findOne({
         where: { id: updateInventoryDto.productId },
       });
       if (!product) {
-        throw new NotFoundException(`Product with ID ${updateInventoryDto.productId} not found`);
+        throw new NotFoundException(
+          `Product with ID ${updateInventoryDto.productId} not found`,
+        );
       }
       inventory.product = product;
     }
@@ -66,6 +112,7 @@ export class InventoryService {
 
   async remove(id: number): Promise<void> {
     const result = await this.inventoryRepository.delete(id);
-    if (result.affected === 0) throw new NotFoundException(`Inventory with ID ${id} not found`);
+    if (result.affected === 0)
+      throw new NotFoundException(`Inventory with ID ${id} not found`);
   }
 }
