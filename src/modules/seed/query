@@ -1,0 +1,67 @@
+BEGIN;
+
+-- 0) تصفير الجداول + إعادة العدادات
+TRUNCATE
+  payments,
+  order_items,
+  orders,
+  inventories,
+  products,
+  users
+RESTART IDENTITY CASCADE;
+
+-- 1) users
+INSERT INTO users (name, email, password) VALUES
+('User 1', 'user1@test.com', 'hashed_pass_1'),
+('User 2', 'user2@test.com', 'hashed_pass_2'),
+('User 3', 'user3@test.com', 'hashed_pass_3');
+
+-- 2) products
+INSERT INTO products (name, description, price, is_active) VALUES
+('Product 1', 'Desc 1', 10.99, true),
+('Product 2', 'Desc 2', 19.99, true),
+('Product 3', 'Desc 3', 5.99, true),
+('Product 4', 'Desc 4', 15.99, true),
+('Product 5', 'Desc 5', 25.99, true);
+
+-- 3) inventories (واحد لكل منتج)
+INSERT INTO inventories (product_id, stock, reserved)
+SELECT id, 100, 0 FROM products;
+
+-- 4) orders (مرتبطة بالمستخدمين)
+INSERT INTO orders (user_id, status, total_amount) VALUES
+(1, 'PENDING', 0),
+(2, 'PENDING', 0),
+(3, 'PENDING', 0);
+
+-- 5) order_items
+INSERT INTO order_items (order_id, product_id, quantity, unit_price_at_purchase) VALUES
+-- order 1
+(1, 1, 2, 10.99),
+(1, 2, 1, 19.99),
+
+-- order 2
+(2, 3, 3, 5.99),
+(2, 4, 1, 15.99),
+
+-- order 3
+(3, 5, 2, 25.99),
+(3, 1, 1, 10.99);
+
+-- 6) تحديث total_amount (إجباري)
+UPDATE orders o
+SET total_amount = sub.total
+FROM (
+  SELECT order_id, SUM(quantity * unit_price_at_purchase) AS total
+  FROM order_items
+  GROUP BY order_id
+) sub
+WHERE o.id = sub.order_id;
+
+-- 7) payments (واحد لكل order)
+INSERT INTO payments (order_id, amount, method, status, paid_at) VALUES
+(1, (SELECT total_amount FROM orders WHERE id = 1), 'CARD', 'PENDING', NULL),
+(2, (SELECT total_amount FROM orders WHERE id = 2), 'CASH', 'PENDING', NULL),
+(3, (SELECT total_amount FROM orders WHERE id = 3), 'CARD', 'PENDING', NULL);
+
+COMMIT;

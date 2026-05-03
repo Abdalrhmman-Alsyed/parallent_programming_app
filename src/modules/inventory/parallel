@@ -1,0 +1,5 @@
+autocannon -c 100 -d 10 -p 10 \
+  -m POST \
+  -H "Content-Type: application/json" \
+  -b '{"productId":1,"stock":1}' \
+  http://localhost:3000/inventory/unsafe

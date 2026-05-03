@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { InventoryService } from './inventory.service';
@@ -12,6 +20,15 @@ export class InventoryController {
     return this.inventoryService.create(createInventoryDto);
   }
 
+  @Post('safe')
+  createSaif(@Body() createInventoryDto: CreateInventoryDto) {
+    return this.inventoryService.createSafeMode(createInventoryDto);
+  }
+  @Post('unsafe')
+  createUnSafe(@Body() createInventoryDto: CreateInventoryDto) {
+    return this.inventoryService.createUnSafeMode(createInventoryDto);
+  }
+
   @Get()
   findAll() {
     return this.inventoryService.findAll();
@@ -23,7 +40,10 @@ export class InventoryController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInventoryDto: UpdateInventoryDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateInventoryDto: UpdateInventoryDto,
+  ) {
     return this.inventoryService.update(Number(id), updateInventoryDto);
   }
 
