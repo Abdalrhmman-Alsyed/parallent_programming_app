@@ -17,6 +17,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         retryAttempts: 10,
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
+        extra: {
+          max: 10,
+          connectionTimeoutMillis: 5000,
+          idleTimeoutMillis: 30000,
+          statement_timeout: 5000,
+        },
         retryDelay: 3000,
         autoLoadEntities: true,
       }),

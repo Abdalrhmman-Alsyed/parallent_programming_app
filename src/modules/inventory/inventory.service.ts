@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product } from '../product/entity/product.entity';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
@@ -9,6 +9,7 @@ import { Inventory } from './entity/inventory.entity';
 @Injectable()
 export class InventoryService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(Inventory)
     private readonly inventoryRepository: Repository<Inventory>,
     @InjectRepository(Product)
@@ -16,19 +17,21 @@ export class InventoryService {
   ) {}
 
   async create(createInventoryDto: CreateInventoryDto): Promise<Inventory> {
-    const product = await this.productRepository.findOne({
-      where: { id: createInventoryDto.productId },
-    });
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${createInventoryDto.productId} not found`);
-    }
+    return this.dataSource.transaction(async (manager) => {
+      const product = await manager.getRepository(Product).findOne({
+        where: { id: createInventoryDto.productId },
+      });
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${createInventoryDto.productId} not found`);
+      }
 
-    const inventory = this.inventoryRepository.create({
-      stock: createInventoryDto.stock ?? 0,
-      reserved: createInventoryDto.reserved ?? 0,
-      product,
+      const inventory = manager.getRepository(Inventory).create({
+        stock: createInventoryDto.stock ?? 0,
+        reserved: createInventoryDto.reserved ?? 0,
+        product,
+      });
+      return manager.getRepository(Inventory).save(inventory);
     });
-    return this.inventoryRepository.save(inventory);
   }
 
   findAll(): Promise<Inventory[]> {
@@ -45,23 +48,31 @@ export class InventoryService {
   }
 
   async update(id: number, updateInventoryDto: UpdateInventoryDto): Promise<Inventory> {
-    const inventory = await this.findOne(id);
-    if (updateInventoryDto.productId !== undefined) {
-      const product = await this.productRepository.findOne({
-        where: { id: updateInventoryDto.productId },
+    return this.dataSource.transaction(async (manager) => {
+      const inventory = await manager.getRepository(Inventory).findOne({
+        where: { id },
+        relations: ['product'],
       });
-      if (!product) {
-        throw new NotFoundException(`Product with ID ${updateInventoryDto.productId} not found`);
+      if (!inventory) throw new NotFoundException(`Inventory with ID ${id} not found`);
+
+      if (updateInventoryDto.productId !== undefined) {
+        const product = await manager.getRepository(Product).findOne({
+          where: { id: updateInventoryDto.productId },
+        });
+        if (!product) {
+          throw new NotFoundException(`Product with ID ${updateInventoryDto.productId} not found`);
+        }
+        inventory.product = product;
       }
-      inventory.product = product;
-    }
-    if (updateInventoryDto.stock !== undefined) {
-      inventory.stock = updateInventoryDto.stock;
-    }
-    if (updateInventoryDto.reserved !== undefined) {
-      inventory.reserved = updateInventoryDto.reserved;
-    }
-    return this.inventoryRepository.save(inventory);
+      if (updateInventoryDto.stock !== undefined) {
+        inventory.stock = updateInventoryDto.stock;
+      }
+      if (updateInventoryDto.reserved !== undefined) {
+        inventory.reserved = updateInventoryDto.reserved;
+      }
+
+      return manager.getRepository(Inventory).save(inventory);
+    });
   }
 
   async remove(id: number): Promise<void> {

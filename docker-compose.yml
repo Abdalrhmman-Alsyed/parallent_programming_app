@@ -10,6 +10,7 @@ services:
       - DATABASE_USER=postgres
       - DATABASE_PASSWORD=password
       - DATABASE_NAME=parallent_programming_app
+      - UV_THREADPOOL_SIZE=8
     env_file:
       - .env
     depends_on:
