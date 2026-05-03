@@ -8,6 +8,7 @@ import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ProductModule } from './modules/product/product.module';
 import { UserModule } from './modules/user/user.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from './modules/user/user.module';
     OrderModule,
     OrderItemModule,
     PaymentModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
