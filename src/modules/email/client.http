@@ -1,0 +1,8 @@
+POST localhost:3000/email/send
+Content-Type: application/json
+
+{
+  "email": "saifkhaledkenani@gmail.com",
+  "subject": "Test Email",
+  "body": "This is a test email sent from the email module."
+}
